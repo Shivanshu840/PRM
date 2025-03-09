@@ -1,0 +1,33 @@
+# Use Node Alpine as base image
+FROM node:18-alpine AS base
+
+# Set working directory inside the container
+WORKDIR /app
+
+# Install dependencies separately
+FROM base AS builder
+RUN apk add --no-cache libc6-compat
+
+# Copy only necessary package files to install dependencies
+COPY packages/db/package.json ./packages/db/
+WORKDIR /app/packages/db
+RUN npm install --omit=dev  # Install only production dependencies
+
+# Copy Prisma schema and migrations
+COPY packages/db/prisma ./prisma
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Final image
+FROM base AS runner
+WORKDIR /app/packages/db
+
+# Copy only necessary files from builder stage
+COPY --from=builder /app/packages/db /app/packages/db
+
+# Expose the database port (if applicable, change according to your DB)
+EXPOSE 5432
+
+# Apply Prisma migrations and start the database (adjust according to your setup)
+CMD ["npx", "prisma", "migrate", "deploy", "--schema=prisma/schema.prisma"]

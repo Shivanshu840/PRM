@@ -1,0 +1,118 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum authRole {
+  Admin
+  User
+  Shuttle_User
+  Parking_User
+  Payment_Handler
+}
+
+enum Parking_Type {
+  Two_Wheeler
+  Four_Wheeler
+}
+
+enum Booking_type {
+  Parking
+  Cab
+  Metro
+  BikeRide
+}
+
+enum Booked_Status {
+  pending
+  approved
+  rejected
+}
+
+model User {
+  User_id    String    @id @default(uuid())
+  FirstName  String
+  MiddleName String?
+  LastName   String
+  Email      String    @unique
+  Password   String
+  Age        Int
+  Phone      String?   @db.VarChar(10)
+  Location   String?
+  CheckIn    DateTime?
+  CheckOut   DateTime?
+  Role       authRole  @default(User)
+
+  Bookings   Booking[]       // One user can have many bookings
+  managedBy  Vendor_EMP?     @relation(fields: [managedById], references: [Emp_id])
+  managedById String?        // Foreign key to Vendor_EMP
+}
+
+model Booking {
+  Booking_ID     String         @id @default(uuid())
+  From           String
+  To             String
+  Date           DateTime
+  PType          Parking_Type
+  Payment        Int?
+  Payment_Status Boolean?       @default(false)
+  Booking_Status Booked_Status? @default(pending)
+  Booking_Type   Booking_type
+  Vehcile_No     String
+  CheckIn        DateTime?
+  CheckOut      DateTime?
+
+  User          User   @relation(fields: [User_id], references: [User_id])  // Belongs to a User
+  User_id       String
+  managedBy     Vendor_EMP? @relation(fields: [managedById], references: [Emp_id])
+  managedById   String?
+}
+
+model Admin {
+  Admin_id   String   @id @default(uuid())
+  FirstName  String
+  MiddleName String?
+  LastName   String
+  Email      String   @unique
+  Password   String   @default("admin1234")
+  Role       authRole @default(Admin)
+
+  Vendor_EMPs   Vendor_EMP[]  // Admin can manage multiple Vendor Employees
+  Vendor_Pakers Vendor_Paker[] // Admin can manage multiple Vendor Parkers
+}
+
+model Vendor_EMP {
+  Emp_id     String  @id @default(uuid())
+  FirstName  String
+  MiddleName String?
+  LastName   String
+  Email      String  @unique
+  Password   String  
+  Salary     Int?
+
+  managedUsers   User[]    // Can manage multiple users
+  managedBookings Booking[] // Can manage multiple bookings
+  managedByAdmin Admin?    @relation(fields: [adminId], references: [Admin_id])
+  adminId        String?
+}
+
+model Vendor_Paker {
+  Vendorp_id String   @id @default(uuid())
+  FirstName  String
+  MiddleName String?
+  LastName   String
+  Email      String   @unique
+  Password   String   @default("vendor1234")
+  Area       Int?
+  Location   String?
+  Charges    Int?
+  Role       authRole @default(Parking_User)
+
+  managedByAdmin Admin? @relation(fields: [adminId], references: [Admin_id])
+  adminId        String?
+}
