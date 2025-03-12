@@ -1,0 +1,41 @@
+FROM node:20-slim AS base
+
+RUN apt-get update -y && apt-get install -y openssl
+
+FROM base AS pruner
+WORKDIR /myapp
+COPY . .
+RUN npx turbo prune --scope=backend --docker
+
+FROM base AS builder
+WORKDIR /myapp
+
+COPY --from=pruner /myapp/out/json/ .
+COPY --from=pruner /myapp/out/package-lock.json ./package-lock.json
+COPY --from=pruner /myapp/out/full/ .
+COPY turbo.json turbo.json
+
+RUN npm ci
+
+RUN cd packages/db && npx prisma generate
+
+RUN cp node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node node_modules/@prisma/client/
+
+RUN npx turbo build --filter=backend...
+
+FROM base AS runner
+WORKDIR /myapp
+ENV NODE_ENV production
+
+COPY --from=builder /myapp/apps/backend/dist ./dist
+COPY --from=builder /myapp/apps/backend/package.json .
+COPY --from=builder /myapp/packages /myapp/packages
+COPY --from=builder /myapp/node_modules /myapp/node_modules
+COPY --from=builder /myapp/packages/db/prisma ./prisma
+
+RUN npx prisma generate
+RUN cp node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node node_modules/@prisma/client/
+
+EXPOSE 4000
+
+CMD ["node", "dist/index.js"]

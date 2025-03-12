@@ -26,8 +26,5 @@ WORKDIR /app/packages/db
 # Copy only necessary files from builder stage
 COPY --from=builder /app/packages/db /app/packages/db
 
-# Expose the database port (if applicable, change according to your DB)
-EXPOSE 5432
-
-# Apply Prisma migrations and start the database (adjust according to your setup)
-CMD ["npx", "prisma", "migrate", "deploy", "--schema=prisma/schema.prisma"]
+# Ensure database is ready before running Prisma migrations
+CMD ["sh", "-c", "npx prisma migrate deploy --schema=prisma/schema.prisma && tail -f /dev/null"]
