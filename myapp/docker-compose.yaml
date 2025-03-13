@@ -5,12 +5,13 @@ services:
       context: .
       dockerfile: Dockerfile.backend
     ports:
-      - "4000:5000"
+      - "5000:5000"
     environment:
-      - DATABASE_URL=postgresql://postgres:12217355@localhost:5432/myapp
+      - DATABASE_URL=postgresql://postgres:12217355@postgres:5432/myapp
       - NODE_ENV=production
     depends_on:
       - postgres
+    restart: always
 
   postgres:
     image: postgres:15
@@ -22,6 +23,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

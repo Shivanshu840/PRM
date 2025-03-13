@@ -36,6 +36,12 @@ COPY --from=builder /myapp/packages/db/prisma ./prisma
 RUN npx prisma generate
 RUN cp node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node node_modules/@prisma/client/
 
-EXPOSE 4000
+RUN npm install --save-dev wait-on
 
-CMD ["node", "dist/index.js"]
+
+COPY start.sh .
+RUN chmod +x start.sh
+
+EXPOSE 5000
+
+CMD ["./start.sh"]
