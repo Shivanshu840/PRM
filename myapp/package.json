@@ -27,6 +27,7 @@
     "@types/jsonwebtoken": "^9.0.9",
     "bcryptjs": "^3.0.2",
     "dotenv": "^16.4.7",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "qrcode": "^1.5.4"
   }
 }

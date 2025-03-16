@@ -22,7 +22,11 @@
     "express": "^4.19.1",
     "jsonwebtoken": "^9.0.2",
     "nodemon": "^3.1.9",
+    "qrcode": "^1.5.4",
     "supertest": "^7.0.0",
     "vitest": "^3.0.8"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.5"
   }
 }
